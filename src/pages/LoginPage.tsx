@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 
@@ -8,12 +8,12 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const role = login(form.email, form.password);
     if (role) {
@@ -89,8 +89,8 @@ export default function LoginPage() {
             )}
 
             <button type="submit" style={styles.submitBtn}
-              onMouseOver={(e) => (e.target.style.backgroundColor = "#e68a00")}
-              onMouseOut={(e) => (e.target.style.backgroundColor = "#FF9900")}
+              onMouseOver={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#e68a00")}
+              onMouseOut={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#FF9900")}
             >
               Sign In
             </button>
@@ -125,7 +125,7 @@ export default function LoginPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   page: {
     display: "flex",
     minHeight: "100vh",

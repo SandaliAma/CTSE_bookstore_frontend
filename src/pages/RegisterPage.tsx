@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { colors, font } from "../styles/theme";
@@ -9,9 +9,9 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     register(form.username, form.email, form.password);
     setSuccess(true);
@@ -82,9 +82,20 @@ export default function RegisterPage() {
   );
 }
 
-function Field({ label, name, value, onChange, type = "text", placeholder, ...rest }) {
+interface FieldProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  minLength?: number;
+}
+
+function Field({ label, name, value, onChange, type = "text", placeholder, ...rest }: FieldProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
       <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", fontFamily: font.sans }}>
         {label}
       </label>
@@ -104,7 +115,7 @@ function Field({ label, name, value, onChange, type = "text", placeholder, ...re
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { display: "flex", minHeight: "100vh", fontFamily: font.sans },
   leftPanel: {
     flex: 1,

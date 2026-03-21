@@ -1,9 +1,15 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import type { ReactNode } from "react";
 
 const ADMIN_BLOCKED = ["/dashboard", "/orders", "/notifications"];
 
-export default function ProtectedRoute({ children, adminOnly = false }) {
+interface ProtectedRouteProps {
+  children: ReactNode;
+  adminOnly?: boolean;
+}
+
+export default function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
   const { currentUser } = useApp();
   const location = useLocation();
 
@@ -13,5 +19,5 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
     return <Navigate to="/admin" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 }

@@ -1,18 +1,18 @@
 import { useApp } from "../context/AppContext";
 import { colors, shadows, font, radius } from "../styles/theme";
 
-const TYPE_CFG = {
+const TYPE_CFG: Record<string, { icon: string; color: string; light: string; label: string }> = {
   Welcome:      { icon: "👋", color: colors.green,  light: colors.greenLight,  label: "Welcome" },
   OrderConfirm: { icon: "✅", color: colors.blue,   light: colors.blueLight,   label: "Order Confirmed" },
   Cancellation: { icon: "❌", color: colors.red,    light: colors.redLight,    label: "Cancellation" },
 };
 
 export default function NotificationsPage() {
-  const { notifications, readIds, unreadCount, markRead, markAllRead } = useApp();
+  const { notifications, readIds, unreadCount, markRead, markAllRead, deleteNotification, notifLoading } = useApp();
 
   const shown = notifications.slice(0, 10);
 
-  const fmtTime = (iso) =>
+  const fmtTime = (iso: string) =>
     new Date(iso).toLocaleString("en-US", {
       month: "short", day: "numeric",
       hour: "2-digit", minute: "2-digit",
@@ -50,7 +50,12 @@ export default function NotificationsPage() {
           ))}
         </div>
 
-        {shown.length === 0 ? (
+        {notifLoading ? (
+          <div style={s.empty}>
+            <div style={{ fontSize: 40 }}>...</div>
+            <h3 style={s.emptyTitle}>Loading notifications</h3>
+          </div>
+        ) : shown.length === 0 ? (
           <div style={s.empty}>
             <div style={{ fontSize: 60 }}>🔔</div>
             <h3 style={s.emptyTitle}>No notifications</h3>
@@ -58,12 +63,12 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <div style={s.list}>
-            {shown.map((notif, i) => {
+            {shown.map((notif) => {
               const cfg = TYPE_CFG[notif.type] || TYPE_CFG.Welcome;
-              const isRead = readIds.has(notif.id);
+              const isRead = readIds.has(notif._id);
               return (
                 <div
-                  key={notif.id}
+                  key={notif._id}
                   style={{
                     ...s.card,
                     borderLeft: `4px solid ${isRead ? "#cbd5e1" : cfg.color}`,
@@ -98,15 +103,36 @@ export default function NotificationsPage() {
                     <p style={s.time}>{fmtTime(notif.timestamp)}</p>
                   </div>
 
-                  {/* Mark as Read button */}
-                  {!isRead ? (
+                  <div style={s.actions}>
+                    {/* Mark as Read button */}
+                    {!isRead ? (
+                      <button
+                        onClick={() => markRead(notif._id)}
+                        style={s.readBtn}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = cfg.light;
+                          e.currentTarget.style.color = cfg.color;
+                          e.currentTarget.style.borderColor = cfg.color;
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = colors.textSub;
+                          e.currentTarget.style.borderColor = colors.border;
+                        }}
+                      >
+                        Mark as Read
+                      </button>
+                    ) : (
+                      <span style={s.readLabel}>✓ Read</span>
+                    )}
+                    {/* Delete button */}
                     <button
-                      onClick={() => markRead(notif.id)}
-                      style={s.readBtn}
+                      onClick={() => deleteNotification(notif._id)}
+                      style={s.deleteBtn}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.background = cfg.light;
-                        e.currentTarget.style.color = cfg.color;
-                        e.currentTarget.style.borderColor = cfg.color;
+                        e.currentTarget.style.background = colors.redLight;
+                        e.currentTarget.style.color = colors.red;
+                        e.currentTarget.style.borderColor = colors.red;
                       }}
                       onMouseOut={(e) => {
                         e.currentTarget.style.background = "transparent";
@@ -114,11 +140,9 @@ export default function NotificationsPage() {
                         e.currentTarget.style.borderColor = colors.border;
                       }}
                     >
-                      Mark as Read
+                      Delete
                     </button>
-                  ) : (
-                    <span style={s.readLabel}>✓ Read</span>
-                  )}
+                  </div>
                 </div>
               );
             })}
@@ -129,7 +153,7 @@ export default function NotificationsPage() {
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { minHeight: "100vh", background: colors.pageBg, fontFamily: font.sans },
   header: { background: "linear-gradient(135deg, #0f172a, #1e293b)", padding: "32px 0 28px" },
   headerInner: {
@@ -185,6 +209,17 @@ const s = {
   readLabel: {
     flexShrink: 0, fontSize: 12, fontWeight: 600,
     color: colors.green, whiteSpace: "nowrap",
+  },
+  actions: {
+    display: "flex", flexDirection: "column", gap: 6, flexShrink: 0,
+  },
+  deleteBtn: {
+    padding: "8px 14px",
+    border: `1.5px solid ${colors.border}`, borderRadius: 8,
+    background: "transparent", color: colors.textSub,
+    fontSize: 12, fontWeight: 600, cursor: "pointer",
+    fontFamily: font.sans, whiteSpace: "nowrap",
+    transition: "all 0.15s",
   },
   empty: {
     background: colors.card, borderRadius: radius.xl,

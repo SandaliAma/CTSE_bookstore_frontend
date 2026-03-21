@@ -1,7 +1,7 @@
 import { useApp } from "../context/AppContext";
 import { colors, shadows, font, radius } from "../styles/theme";
 
-const STATUS = {
+const STATUS: Record<string, { bg: string; color: string; border: string; dot: string; label: string }> = {
   pending:   { bg: "#fffbeb", color: "#d97706", border: "#fde68a", dot: "#f59e0b", label: "Pending" },
   completed: { bg: colors.greenLight, color: colors.green, border: "#a7f3d0", dot: colors.green, label: "Completed" },
   cancelled: { bg: colors.redLight, color: colors.red, border: "#fecaca", dot: colors.red, label: "Cancelled" },
@@ -9,7 +9,7 @@ const STATUS = {
 
 export default function OrdersPage() {
   const { orders, cancelOrder, currentUser } = useApp();
-  const userOrders = orders.filter((o) => o.userId === currentUser.id);
+  const userOrders = orders.filter((o) => o.userId === currentUser!.id);
 
   const stats = [
     { label: "Total Borrows", value: userOrders.length,                                                  color: colors.blue,   light: colors.blueLight,   icon: "📖" },
@@ -18,7 +18,7 @@ export default function OrdersPage() {
     { label: "Cancelled",     value: userOrders.filter(o => o.status === "cancelled").length,            color: colors.red,    light: colors.redLight,     icon: "❌" },
   ];
 
-  const fmtDate = (iso) =>
+  const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
@@ -108,7 +108,7 @@ export default function OrdersPage() {
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { minHeight: "100vh", background: colors.pageBg, fontFamily: font.sans },
   header: { background: "linear-gradient(135deg, #0f172a, #1e293b)", padding: "32px 0 28px" },
   headerInner: { maxWidth: 1280, margin: "0 auto", padding: "0 28px" },

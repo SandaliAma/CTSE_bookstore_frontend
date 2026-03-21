@@ -6,20 +6,20 @@ export default function DashboardPage() {
   const { currentUser, books, orders, notifications } = useApp();
   const navigate = useNavigate();
 
-  const userOrders = orders.filter((o) => o.userId === currentUser.id);
+  const userOrders = orders.filter((o) => o.userId === currentUser!.id);
   const pending = userOrders.filter((o) => o.status === "pending").length;
   const featured = books.slice(0, 4);
   const recentOrders = userOrders.slice(0, 3);
 
-  const stats = [
+  const stats: Array<{ label: string; value: number; icon: string; color: string; light: string; action?: () => void }> = [
     { label: "Books Available", value: books.length,         icon: "📚", color: colors.accent, light: colors.accentLight, action: () => navigate("/books") },
     { label: "Your Borrows",    value: userOrders.length,    icon: "📖", color: colors.blue,   light: colors.blueLight,   action: () => navigate("/orders") },
     { label: "Pending Returns", value: pending,              icon: "⏳", color: colors.purple, light: colors.purpleLight, action: () => navigate("/orders") },
     { label: "Notifications",   value: notifications.length, icon: "🔔", color: colors.green,  light: colors.greenLight,  action: () => navigate("/notifications") },
   ];
 
-  const statusColor = { pending: colors.accent, completed: colors.green, cancelled: colors.red };
-  const statusBg    = { pending: colors.accentLight, completed: colors.greenLight, cancelled: colors.redLight };
+  const statusColor: Record<string, string> = { pending: colors.accent, completed: colors.green, cancelled: colors.red };
+  const statusBg: Record<string, string>    = { pending: colors.accentLight, completed: colors.greenLight, cancelled: colors.redLight };
 
   return (
     <div style={s.page}>
@@ -27,7 +27,7 @@ export default function DashboardPage() {
       <div style={s.banner}>
         <div style={s.bannerInner}>
           <div>
-            <p style={s.bannerGreeting}>Good day, {currentUser.username} 👋</p>
+            <p style={s.bannerGreeting}>Good day, {currentUser!.username} 👋</p>
             <h1 style={s.bannerTitle}>Welcome to your Dashboard</h1>
             <p style={s.bannerSub}>Browse thousands of books, track your orders, and manage your library all in one place.</p>
             <div style={s.bannerActions}>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 20 }}>
             {/* Recent Orders */}
             <div style={s.section}>
               <div style={s.sectionHeader}>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                   <p>No orders yet</p>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
                   {recentOrders.map((order) => (
                     <div key={order.id} style={s.orderRow}>
                       <div style={s.orderIcon}>📦</div>
@@ -152,11 +152,11 @@ export default function DashboardPage() {
               {notifications.length === 0 ? (
                 <div style={s.empty}><span>🔔</span><p>No notifications</p></div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
                   {notifications.slice(0, 3).map((n) => {
                     const cfg = notifConfig[n.type] || notifConfig.Welcome;
                     return (
-                      <div key={n.id} style={s.notifRow}>
+                      <div key={n._id} style={s.notifRow}>
                         <div style={{ ...s.notifDot, background: cfg.color }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={s.notifMsg}>{n.message}</p>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick actions */}
-            {currentUser.role === "admin" && (
+            {currentUser!.role === "admin" && (
               <div style={{ ...s.section, background: "linear-gradient(135deg, #1e293b, #0f172a)", border: "none" }}>
                 <h2 style={{ ...s.sectionTitle, color: "#f1f5f9", marginBottom: 4 }}>Admin Panel</h2>
                 <p style={{ ...s.sectionSub, color: "#64748b", marginBottom: 16 }}>Manage your catalog</p>
@@ -184,14 +184,14 @@ export default function DashboardPage() {
   );
 }
 
-const notifConfig = {
+const notifConfig: Record<string, { color: string; light: string }> = {
   Welcome:      { color: "#10b981", light: "#ecfdf5" },
   OrderConfirm: { color: "#3b82f6", light: "#eff6ff" },
   Cancellation: { color: "#ef4444", light: "#fef2f2" },
 };
 
-function bookGradient(colorClass) {
-  const map = {
+function bookGradient(colorClass: string): string {
+  const map: Record<string, string> = {
     "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
     "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
     "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
@@ -205,7 +205,7 @@ function bookGradient(colorClass) {
   return map[colorClass] || "linear-gradient(135deg, #94a3b8, #64748b)";
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { minHeight: "100vh", background: colors.pageBg, fontFamily: font.sans },
   banner: {
     background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e293b 100%)",

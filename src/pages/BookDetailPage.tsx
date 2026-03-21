@@ -3,8 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { colors, shadows, font, radius } from "../styles/theme";
 
-function bookGradient(colorClass) {
-  const map = {
+function bookGradient(colorClass: string): string {
+  const map: Record<string, string> = {
     "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
     "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
     "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
@@ -19,7 +19,7 @@ function bookGradient(colorClass) {
 }
 
 export default function BookDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { books, placeOrder } = useApp();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
@@ -135,7 +135,7 @@ export default function BookDetailPage() {
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { minHeight: "100vh", background: colors.pageBg, fontFamily: font.sans },
   breadcrumb: {
     background: "linear-gradient(135deg, #0f172a, #1e293b)",
@@ -185,7 +185,6 @@ const s = {
   ratingRow: { display: "flex", alignItems: "center", gap: 4, marginBottom: 4 },
   ratingText: { fontSize: 13, color: colors.textSub, marginLeft: 6, fontWeight: 500 },
   divider: { height: 1, background: colors.border, margin: "20px 0" },
-  price: { fontSize: 34, fontWeight: 900, color: colors.text, margin: "0 0 16px" },
   description: { fontSize: 15, color: colors.textSub, lineHeight: 1.7, margin: 0 },
   orderSection: { display: "flex", flexDirection: "column", gap: 14 },
   qtyLabel: { fontSize: 13, fontWeight: 600, color: colors.textSub },

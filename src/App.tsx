@@ -11,15 +11,16 @@ import BookDetailPage from "./pages/BookDetailPage";
 import OrdersPage from "./pages/OrdersPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminPage from "./pages/AdminPage";
+import type { ReactNode } from "react";
 
 const AUTH_ROUTES = ["/login", "/register"];
 
-function GuestRoute({ children }) {
+function GuestRoute({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
   if (currentUser) {
     return <Navigate to={currentUser.role === "admin" ? "/admin" : "/dashboard"} replace />;
   }
-  return children;
+  return <>{children}</>;
 }
 
 function Layout() {

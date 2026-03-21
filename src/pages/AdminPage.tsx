@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import BookModal from "../components/BookModal";
 import { colors, shadows, font, radius } from "../styles/theme";
+import type { Book } from "../types";
 
-const STOCK_STATUS = (n) =>
+const STOCK_STATUS = (n: number) =>
   n === 0     ? { text: "Out of Stock", bg: colors.redLight, color: colors.red }
   : n <= 5    ? { text: "Low Stock",    bg: "#fffbeb",       color: "#d97706" }
                : { text: "In Stock",    bg: colors.greenLight, color: colors.green };
@@ -11,9 +12,9 @@ const STOCK_STATUS = (n) =>
 export default function AdminPage() {
   const { books, addBook, updateBook, deleteBook } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
-  const [editBook, setEditBook] = useState(null);
+  const [editBook, setEditBook] = useState<Book | null>(null);
   const [search, setSearch] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState<Book | null>(null);
 
   const filtered = books.filter(
     (b) =>
@@ -21,12 +22,12 @@ export default function AdminPage() {
       b.author.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleEdit = (book) => { setEditBook(book); setModalOpen(true); };
+  const handleEdit = (book: Book) => { setEditBook(book); setModalOpen(true); };
   const handleAdd  = () => { setEditBook(null); setModalOpen(true); };
-  const handleSave = (form) => { editBook ? updateBook(editBook.id, form) : addBook(form); };
+  const handleSave = (form: Parameters<typeof addBook>[0]) => { editBook ? updateBook(editBook.id, form) : addBook(form); };
 
   const stats = [
-    { label: "Total Books",   value: books.length,                                  icon: "📚", color: colors.accent, light: colors.accentLight },
+    { label: "Total Books",   value: books.length,                                                  icon: "📚", color: colors.accent, light: colors.accentLight },
     { label: "In Stock",      value: books.filter(b => b.stockCount > 0).length,    icon: "✅", color: colors.green,  light: colors.greenLight },
     { label: "Low Stock",     value: books.filter(b => b.stockCount > 0 && b.stockCount <= 5).length, icon: "⚠️", color: "#d97706", light: "#fffbeb" },
     { label: "Out of Stock",  value: books.filter(b => b.stockCount === 0).length,  icon: "❌", color: colors.red,   light: colors.redLight },
@@ -74,14 +75,14 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto" as const }}>
             <table style={s.table}>
               <thead>
                 <tr style={s.thead}>
                   <th style={{ ...s.th, width: 300 }}>Book</th>
                   <th style={s.th}>Category</th>
                   <th style={s.th}>Stock</th>
-                  <th style={{ ...s.th, textAlign: "right" }}>Actions</th>
+                  <th style={{ ...s.th, textAlign: "right" as const }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -108,7 +109,7 @@ export default function AdminPage() {
                           {book.stockCount > 0 ? book.stockCount : "—"} · {st.text}
                         </span>
                       </td>
-                      <td style={{ ...s.td, textAlign: "right" }}>
+                      <td style={{ ...s.td, textAlign: "right" as const }}>
                         <div style={s.actions}>
                           <button
                             onClick={() => handleEdit(book)}
@@ -172,8 +173,8 @@ export default function AdminPage() {
   );
 }
 
-function bookGradient(colorClass) {
-  const map = {
+function bookGradient(colorClass: string): string {
+  const map: Record<string, string> = {
     "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
     "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
     "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
@@ -187,7 +188,7 @@ function bookGradient(colorClass) {
   return map[colorClass] || "linear-gradient(135deg, #94a3b8, #64748b)";
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { minHeight: "100vh", background: colors.pageBg, fontFamily: font.sans },
   header: { background: "linear-gradient(135deg, #0f172a, #1e293b)", padding: "32px 0 28px" },
   headerInner: {
@@ -235,12 +236,12 @@ const s = {
     border: "none", background: "transparent", fontSize: 13,
     color: colors.text, outline: "none", fontFamily: font.sans, width: 200,
   },
-  table: { width: "100%", borderCollapse: "collapse", fontFamily: font.sans },
+  table: { width: "100%", borderCollapse: "collapse" as const, fontFamily: font.sans },
   thead: { background: "#f8fafc", borderBottom: `2px solid ${colors.border}` },
   th: {
-    padding: "12px 20px", textAlign: "left",
+    padding: "12px 20px", textAlign: "left" as const,
     fontSize: 12, fontWeight: 700, color: colors.textSub,
-    textTransform: "uppercase", letterSpacing: "0.5px",
+    textTransform: "uppercase" as const, letterSpacing: "0.5px",
   },
   tr: { borderBottom: `1px solid ${colors.border}`, transition: "background 0.1s" },
   td: { padding: "14px 20px", fontSize: 14, color: colors.text },
@@ -255,7 +256,6 @@ const s = {
     fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999,
     background: colors.accentLight, color: colors.accentDark,
   },
-  priceVal: { fontSize: 15, fontWeight: 800, color: colors.text },
   stockPill: { fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 999 },
   actions: { display: "flex", gap: 8, justifyContent: "flex-end" },
   editBtn: {

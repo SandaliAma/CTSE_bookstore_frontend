@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { CATEGORIES } from "../data/mockData";
 import { colors, shadows, font, radius } from "../styles/theme";
+import type { Book } from "../types";
 
-function bookGradient(colorClass) {
-  const map = {
+function bookGradient(colorClass: string): string {
+  const map: Record<string, string> = {
     "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
     "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
     "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
@@ -94,7 +95,13 @@ export default function BooksPage() {
   );
 }
 
-function BookCard({ book, gradient, onClick }) {
+interface BookCardProps {
+  book: Book;
+  gradient: string;
+  onClick: () => void;
+}
+
+function BookCard({ book, gradient, onClick }: BookCardProps) {
   const [hovered, setHovered] = useState(false);
 
   const stockStatus = book.stockCount === 0
@@ -144,7 +151,7 @@ function BookCard({ book, gradient, onClick }) {
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   page: { minHeight: "100vh", background: colors.pageBg, fontFamily: font.sans },
   pageHeader: {
     background: "linear-gradient(135deg, #0f172a, #1e293b)",
@@ -233,7 +240,6 @@ const s = {
   },
   author: { fontSize: 11.5, color: colors.textSub, marginBottom: 8 },
   footer: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" },
-  price: { fontSize: 16, fontWeight: 800, color: colors.text },
   stock: { fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999 },
   empty: {
     textAlign: "center", padding: "80px 0",

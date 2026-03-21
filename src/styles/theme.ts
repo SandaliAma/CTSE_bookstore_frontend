@@ -20,14 +20,14 @@ export const colors = {
   text: "#0f172a",
   textSub: "#64748b",
   textMuted: "#94a3b8",
-};
+} as const;
 
 export const shadows = {
   sm: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
   md: "0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)",
   lg: "0 10px 30px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06)",
   xl: "0 20px 60px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06)",
-};
+} as const;
 
 export const radius = {
   sm: 8,
@@ -35,11 +35,11 @@ export const radius = {
   lg: 16,
   xl: 20,
   full: 9999,
-};
+} as const;
 
 export const font = {
   sans: "'Segoe UI', system-ui, -apple-system, sans-serif",
-};
+} as const;
 
 export const card = {
   background: colors.card,
@@ -47,4 +47,4 @@ export const card = {
   borderRadius: radius.lg,
   boxShadow: shadows.md,
   padding: "24px",
-};
+} as const;

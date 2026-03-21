@@ -3,17 +3,25 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { colors, font } from "../styles/theme";
 
+interface NavLink {
+  to: string;
+  label: string;
+  icon: string;
+  admin?: boolean;
+  badge?: number;
+}
+
 export default function Navbar() {
   const { currentUser, logout, unreadCount } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const [hovered, setHovered] = useState(null);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   const handleLogout = () => { logout(); navigate("/login"); };
 
   const isAdmin = currentUser?.role === "admin";
 
-  const navLinks = isAdmin
+  const navLinks: NavLink[] = isAdmin
     ? [
         { to: "/books",  label: "Books",       icon: "📚" },
         { to: "/admin",  label: "Admin Panel",  icon: "⚙", admin: true },
@@ -25,7 +33,7 @@ export default function Navbar() {
         { to: "/notifications", label: "Alerts",   icon: "🔔", badge: unreadCount },
       ];
 
-  const isActive = (to) =>
+  const isActive = (to: string) =>
     to === "/dashboard"
       ? location.pathname === "/dashboard"
       : location.pathname.startsWith(to);
@@ -62,7 +70,7 @@ export default function Navbar() {
                 >
                   <span style={s.linkIcon}>{link.icon}</span>
                   <span>{link.label}</span>
-                  {link.badge > 0 && (
+                  {link.badge !== undefined && link.badge > 0 && (
                     <span style={s.badge}>{link.badge > 9 ? "9+" : link.badge}</span>
                   )}
                 </Link>
@@ -94,7 +102,7 @@ export default function Navbar() {
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   nav: {
     background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
     position: "sticky", top: 0, zIndex: 200,

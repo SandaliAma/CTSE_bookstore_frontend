@@ -1,15 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { colors, font, radius, shadows } from "../styles/theme";
+import type { Book, BookFormData } from "../types";
 
-export default function BookModal({ book, onSave, onClose }) {
-  const [form, setForm] = useState({ title: "", author: "", category: "", stockCount: "", description: "" });
+interface BookModalProps {
+  book: Book | null;
+  onSave: (form: BookFormData) => void;
+  onClose: () => void;
+}
+
+export default function BookModal({ book, onSave, onClose }: BookModalProps) {
+  const [form, setForm] = useState<BookFormData>({ title: "", author: "", category: "", stockCount: "", description: "" });
 
   useEffect(() => {
     if (book) setForm({ title: book.title, author: book.author, category: book.category, stockCount: book.stockCount, description: book.description });
   }, [book]);
 
-  const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
-  const handleSubmit = (e) => { e.preventDefault(); onSave(form); onClose(); };
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const handleSubmit = (e: FormEvent) => { e.preventDefault(); onSave(form); onClose(); };
 
   return (
     <div style={s.overlay}>
@@ -59,10 +67,21 @@ export default function BookModal({ book, onSave, onClose }) {
   );
 }
 
-function Field({ label, name, value, onChange, type = "text", placeholder, ...rest }) {
+interface FieldProps {
+  label: string;
+  name: string;
+  value: string | number;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  min?: string;
+}
+
+function Field({ label, name, value, onChange, type = "text", placeholder, ...rest }: FieldProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 12, fontWeight: 700, color: colors.textSub, textTransform: "uppercase", letterSpacing: "0.4px", fontFamily: font.sans }}>
+    <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+      <label style={{ fontSize: 12, fontWeight: 700, color: colors.textSub, textTransform: "uppercase" as const, letterSpacing: "0.4px", fontFamily: font.sans }}>
         {label}
       </label>
       <input
@@ -80,7 +99,7 @@ function Field({ label, name, value, onChange, type = "text", placeholder, ...re
   );
 }
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   overlay: {
     position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
     display: "flex", alignItems: "center", justifyContent: "center",
