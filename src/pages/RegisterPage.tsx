@@ -23,26 +23,28 @@ export default function RegisterPage() {
 
   const [success, setSuccess] = useState(false);
   const [username, setUserName] = useState("");
+  const [error, setError] = useState("");
+  const { showToast } = useApp();
 
   const onSubmit = async (data: FormValues) => {
+    setError("");
     try {
-      console.log("form data:", data);
-
       const res = await registerUser(data);
 
-      alert(`Rgistration successful. please login`);
       if (res) {
         setUserName(data.username);
         setSuccess(true);
+        showToast("Registration successful! Redirecting to login...", "success");
+        setTimeout(() => {
+          navigate("/login");
+          setSuccess(false);
+        }, 2000);
       }
-      navigate("/login");
-      setSuccess(false);
-    } catch (error: any) {
-      console.error("Login failed:", error);
-
-      alert(
-        error?.response?.data?.message || "Login failed. Please try again.",
-      );
+    } catch (err: any) {
+      console.error("Registration failed:", err);
+      const msg = err?.response?.data?.msg || err?.response?.data?.message || "Registration failed. Please try again.";
+      setError(msg);
+      showToast(msg, "error");
     }
   };
 

@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import BookImage from "../components/BookImage";
 import { colors, shadows, font, radius } from "../styles/theme";
 
-function bookGradient(colorClass: string): string {
+function bookGradient(category: string): string {
   const map: Record<string, string> = {
-    "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
-    "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
-    "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
-    "bg-gray-700":   "linear-gradient(135deg, #9ca3af, #4b5563)",
-    "bg-orange-400": "linear-gradient(135deg, #fb923c, #f97316)",
-    "bg-purple-500": "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-    "bg-amber-600":  "linear-gradient(135deg, #fbbf24, #d97706)",
-    "bg-teal-500":   "linear-gradient(135deg, #2dd4bf, #14b8a6)",
-    "bg-indigo-500": "linear-gradient(135deg, #818cf8, #6366f1)",
+    "Romance":   "linear-gradient(135deg, #f472b6, #ec4899)",
+    "Thriller":  "linear-gradient(135deg, #64748b, #334155)",
+    "Fantasy":   "linear-gradient(135deg, #a78bfa, #7c3aed)",
+    "Science":   "linear-gradient(135deg, #60a5fa, #2563eb)",
+    "Horror":    "linear-gradient(135deg, #ef4444, #991b1b)",
+    "Self-help": "linear-gradient(135deg, #fbbf24, #d97706)",
+    "Health":    "linear-gradient(135deg, #34d399, #059669)",
+    "Cookbooks": "linear-gradient(135deg, #fb923c, #ea580c)",
+    "Poetry":    "linear-gradient(135deg, #c084fc, #9333ea)",
   };
-  return map[colorClass] || "linear-gradient(135deg, #94a3b8, #64748b)";
+  return map[category] || "linear-gradient(135deg, #818cf8, #6366f1)";
 }
 
 export default function BookDetailPage() {
@@ -63,9 +64,14 @@ export default function BookDetailPage() {
         <div style={s.card}>
           <div style={s.grid}>
             {/* Cover */}
-            <div style={{ ...s.cover, background: bookGradient(book.color) }}>
-              <div style={s.coverIcon}>📖</div>
-              <div style={s.coverText}>{book.title}</div>
+            <div style={{ ...s.cover, background: bookGradient(book.category), position: "relative", overflow: "hidden" }}>
+              <BookImage imageLink={book.imageLink} alt={book.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              {!book.imageLink && (
+                <>
+                  <div style={s.coverIcon}>📖</div>
+                  <div style={s.coverText}>{book.title}</div>
+                </>
+              )}
             </div>
 
             {/* Details */}

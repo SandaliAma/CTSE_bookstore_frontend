@@ -38,18 +38,6 @@ export default function NotificationsPage() {
       </div>
 
       <div style={s.content}>
-        {/* Legend */}
-        <div style={s.legend}>
-          {Object.entries(TYPE_CFG).map(([type, cfg]) => (
-            <div key={type} style={s.legendItem}>
-              <div style={{ ...s.legendDot, background: cfg.light }}>
-                <span style={{ fontSize: 14 }}>{cfg.icon}</span>
-              </div>
-              <span style={{ ...s.legendLabel, color: cfg.color }}>{cfg.label}</span>
-            </div>
-          ))}
-        </div>
-
         {notifLoading ? (
           <div style={s.empty}>
             <div style={{ fontSize: 40 }}>...</div>
@@ -77,10 +65,6 @@ export default function NotificationsPage() {
                 >
                   {/* Unread dot */}
                   {!isRead && <div style={{ ...s.unreadDot, background: cfg.color }} />}
-
-                  <div style={{ ...s.iconWrap, background: isRead ? "#f1f5f9" : cfg.light }}>
-                    <span style={{ fontSize: 20 }}>{cfg.icon}</span>
-                  </div>
 
                   <div style={s.body}>
                     <div style={s.topRow}>

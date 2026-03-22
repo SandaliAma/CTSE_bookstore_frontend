@@ -4,20 +4,21 @@ import type { Book, BookFormData } from "../types";
 
 interface BookModalProps {
   book: Book | null;
-  onSave: (form: BookFormData) => void;
+  onSave: (form: BookFormData, image?: File) => void;
   onClose: () => void;
 }
 
 export default function BookModal({ book, onSave, onClose }: BookModalProps) {
-  const [form, setForm] = useState<BookFormData>({ title: "", author: "", category: "", stockCount: "", description: "" });
+  const [form, setForm] = useState<BookFormData>({ title: "", author: "", category: "", price: 0, stockCount: "", description: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (book) setForm({ title: book.title, author: book.author, category: book.category, stockCount: book.stockCount, description: book.description });
+    if (book) setForm({ title: book.title, author: book.author, category: book.category, price: book.price || 0, stockCount: book.stockCount, description: book.description || "" });
   }, [book]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
-  const handleSubmit = (e: FormEvent) => { e.preventDefault(); onSave(form); onClose(); };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave(form, imageFile || undefined); onClose(); };
 
   return (
     <div style={s.overlay}>
@@ -38,20 +39,27 @@ export default function BookModal({ book, onSave, onClose }: BookModalProps) {
             <label style={s.label}>Category</label>
             <select name="category" value={form.category} onChange={handleChange} required style={s.select}>
               <option value="">Select a category...</option>
-              {["Fiction","Science","History","Technology","Self-Help","Sci-Fi","Psychology"].map((c) => (
+              {["Romance","Thriller","Fantasy","Science","Horror","Self-help","Health","Cookbooks","Poetry"].map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
 
+          <Field label="Price" name="price" type="number" min="0" value={form.price || ""} onChange={handleChange} required />
           <Field label="Stock Count" name="stockCount" type="number" min="0" value={form.stockCount} onChange={handleChange} required />
 
           <div style={s.field}>
-            <label style={s.label}>Description</label>
-            <textarea
-              name="description" value={form.description} onChange={handleChange}
-              rows={3} required placeholder="Brief description of the book..."
-              style={s.textarea}
+            <label style={s.label}>Book Cover Image {!book && "*"}</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              required={!book}
+              style={{
+                border: `1.5px solid ${colors.border}`, borderRadius: 8,
+                padding: "10px 13px", fontSize: 14, color: colors.text,
+                background: "#fafafa", fontFamily: font.sans,
+              }}
             />
           </div>
 

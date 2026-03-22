@@ -18,7 +18,11 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { setCurrentUser } = useApp();
 
+  const [error, setError] = useState("");
+  const { showToast } = useApp();
+
   const onSubmit = async (data: FormValues) => {
+    setError("");
     try {
       const res = await login(data);
 
@@ -36,10 +40,16 @@ export default function LoginPage() {
       localStorage.setItem("bookstore_user", JSON.stringify(newUser));
       localStorage.setItem("token", res.token);
 
+      showToast(`Welcome back, ${username}!`, "success");
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       console.error(err);
-      alert(err?.response?.data?.message || "Login failed");
+      const raw = err?.response?.data?.msg || err?.response?.data?.message || "";
+      const msg = raw === "Invalid Credentials"
+        ? "Incorrect email or password. Please try again."
+        : raw || "Login failed. Please check your credentials.";
+      setError(msg);
+      showToast(msg, "error");
     }
   };
 
@@ -115,6 +125,13 @@ export default function LoginPage() {
               )}
             </div>
 
+            {error && (
+              <div style={styles.errorBox}>
+                <span>⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
             <button
               type="submit"
               style={styles.submitBtn}
@@ -144,21 +161,6 @@ export default function LoginPage() {
               Create one free
             </Link>
           </p>
-
-          {/* Demo box */}
-          <div style={styles.demoBox}>
-            <p style={styles.demoTitle}>🔑 Demo Credentials</p>
-            <div style={styles.demoRow}>
-              <span style={styles.demoLabel}>User</span>
-              <span style={styles.demoValue}>
-                john@example.com / password123
-              </span>
-            </div>
-            <div style={styles.demoRow}>
-              <span style={styles.demoLabel}>Admin</span>
-              <span style={styles.demoValue}>sara@example.com / admin123</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

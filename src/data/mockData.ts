@@ -7,7 +7,7 @@ export const USERS: UserWithPassword[] = [
 ];
 
 // UI constant — category filter list (not from backend)
-export const CATEGORIES = ["All", "Fiction", "Science", "History", "Technology", "Self-Help", "Sci-Fi", "Psychology"] as const;
+export const CATEGORIES = ["All", "Romance", "Thriller", "Fantasy", "Science", "Horror", "Self-help", "Health", "Cookbooks", "Poetry"] as const;
 
 // Books, Orders, Notifications — will come from backend APIs
 // Initialized as empty; populate via AppContext when backend is connected

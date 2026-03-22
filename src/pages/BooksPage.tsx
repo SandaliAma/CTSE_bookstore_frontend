@@ -1,23 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { CATEGORIES } from "../data/mockData";
 import { colors, shadows, font, radius } from "../styles/theme";
 import type { Book } from "../types";
+import api from "../services/api";
 
-function bookGradient(colorClass: string): string {
-  const map: Record<string, string> = {
-    "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
-    "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
-    "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
-    "bg-gray-700":   "linear-gradient(135deg, #9ca3af, #4b5563)",
-    "bg-orange-400": "linear-gradient(135deg, #fb923c, #f97316)",
-    "bg-purple-500": "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-    "bg-amber-600":  "linear-gradient(135deg, #fbbf24, #d97706)",
-    "bg-teal-500":   "linear-gradient(135deg, #2dd4bf, #14b8a6)",
-    "bg-indigo-500": "linear-gradient(135deg, #818cf8, #6366f1)",
-  };
-  return map[colorClass] || "linear-gradient(135deg, #94a3b8, #64748b)";
+function useBookImage(imageLink?: string) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!imageLink) return;
+    // Convert the catalog service URL to go through gateway
+    const gatewayUrl = imageLink.replace(/http:\/\/localhost:\d+/, "");
+    api.get(gatewayUrl, { responseType: "blob" })
+      .then((res) => setSrc(URL.createObjectURL(res.data)))
+      .catch(() => setSrc(null));
+  }, [imageLink]);
+  return src;
+}
+
+const categoryGradients: Record<string, string> = {
+  "Romance":   "linear-gradient(135deg, #f472b6, #ec4899)",
+  "Thriller":  "linear-gradient(135deg, #64748b, #334155)",
+  "Fantasy":   "linear-gradient(135deg, #a78bfa, #7c3aed)",
+  "Science":   "linear-gradient(135deg, #60a5fa, #2563eb)",
+  "Horror":    "linear-gradient(135deg, #ef4444, #991b1b)",
+  "Self-help": "linear-gradient(135deg, #fbbf24, #d97706)",
+  "Health":    "linear-gradient(135deg, #34d399, #059669)",
+  "Cookbooks": "linear-gradient(135deg, #fb923c, #ea580c)",
+  "Poetry":    "linear-gradient(135deg, #c084fc, #9333ea)",
+};
+
+function bookGradient(category: string): string {
+  return categoryGradients[category] || "linear-gradient(135deg, #818cf8, #6366f1)";
 }
 
 export default function BooksPage() {
@@ -86,7 +101,7 @@ export default function BooksPage() {
         ) : (
           <div style={s.grid}>
             {filtered.map((book) => (
-              <BookCard key={book.id} book={book} gradient={bookGradient(book.color)} onClick={() => navigate(`/books/${book.id}`)} />
+              <BookCard key={book.id} book={book} gradient={bookGradient(book.category)} onClick={() => navigate(`/books/${book.id}`)} />
             ))}
           </div>
         )}
@@ -103,6 +118,7 @@ interface BookCardProps {
 
 function BookCard({ book, gradient, onClick }: BookCardProps) {
   const [hovered, setHovered] = useState(false);
+  const imageSrc = useBookImage(book.imageLink);
 
   const stockStatus = book.stockCount === 0
     ? { text: "Out of Stock", bg: colors.redLight, color: colors.red }
@@ -123,8 +139,11 @@ function BookCard({ book, gradient, onClick }: BookCardProps) {
     >
       {/* Cover */}
       <div style={{ ...s.cover, background: gradient }}>
+        {imageSrc && (
+          <img src={imageSrc} alt={book.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
         <div style={s.coverOverlay}>
-          <div style={s.bookIcon}>📖</div>
+          {!imageSrc && <div style={s.bookIcon}>📖</div>}
           <div style={s.coverInfo}>
             <p style={s.coverTitle}>{book.title}</p>
           </div>

@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import { USERS } from "../data/mockData";
 import { notificationAPI } from "../services/notificationService";
+import { bookAPI } from "../services/bookService";
+import { orderAPI } from "../services/orderService";
 import type { User, Book, Order, Notification, Toast, BookFormData, AppContextType } from "../types";
+import { USERS } from "../data/mockData";
 
 const AppContext = createContext<AppContextType | null>(null);
 
@@ -32,6 +34,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setNotifLoading(false);
     }
   }, []);
+
+  // Fetch books from Catalog Service
+  const fetchBooks = useCallback(async () => {
+    try {
+      const data = await bookAPI.getAll();
+      const mapped = (Array.isArray(data) ? data : []).map((b: any) => ({
+        ...b,
+        id: b._id || b.id,
+      }));
+      setBooks(mapped);
+    } catch (err) {
+      console.error("Failed to fetch books:", err);
+    }
+  }, []);
+
+  // Fetch orders from Order Service
+  const fetchOrders = useCallback(async (userId: string) => {
+    try {
+      const res = await orderAPI.getByUser(userId);
+      const data = res.data || res;
+      const mapped = (Array.isArray(data) ? data : []).map((o: any) => ({
+        id: o.orderId || o._id || o.id,
+        userId: o.userId,
+        bookId: o.bookId,
+        bookTitle: o.bookTitle || "",
+        quantity: o.quantity,
+        status: o.status,
+        orderDate: o.orderDate || o.createdAt,
+      }));
+      setOrders(mapped);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchBooks();
+      fetchOrders(currentUser.id);
+    }
+  }, [currentUser, fetchBooks, fetchOrders]);
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -79,61 +122,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const book = books.find((b) => b.id === bookId);
     if (!book || book.stockCount < quantity) return false;
 
-    const newOrder: Order = {
-      id: `o${Date.now()}`,
-      userId: currentUser!.id,
-      bookId,
-      bookTitle: book.title,
-      quantity,
-      status: "pending",
-      orderDate: new Date().toISOString(),
-    };
-
-    setOrders((prev) => [newOrder, ...prev]);
-    setBooks((prev) =>
-      prev.map((b) => (b.id === bookId ? { ...b, stockCount: b.stockCount - quantity } : b))
-    );
-
-    // Send OrderConfirm notification via backend
     try {
-      await notificationAPI.send({
+      const res = await orderAPI.create({
         userId: currentUser!.id,
-        type: "OrderConfirm",
-        message: `Your borrow request for '${book.title}' (x${quantity}) has been confirmed.`,
+        bookId,
+        quantity,
       });
-      await fetchNotifications(currentUser!.id);
+
+      // Optimistically add to local state
+      const newOrder: Order = {
+        id: res.data?.orderId || res.data?._id || `o${Date.now()}`,
+        userId: currentUser!.id,
+        bookId,
+        bookTitle: book.title,
+        quantity,
+        status: "pending",
+        orderDate: new Date().toISOString(),
+      };
+      setOrders((prev) => [newOrder, ...prev]);
+      setBooks((prev) =>
+        prev.map((b) => (b.id === bookId ? { ...b, stockCount: b.stockCount - quantity } : b))
+      );
+
+      // Send OrderConfirm notification
+      try {
+        await notificationAPI.send({
+          userId: currentUser!.id,
+          type: "OrderConfirm",
+          message: `Your borrow request for '${book.title}' (x${quantity}) has been confirmed.`,
+        });
+        await fetchNotifications(currentUser!.id);
+      } catch (err) {
+        console.error("Failed to send order notification:", err);
+      }
+      showToast(`Order placed for "${book.title}"!`);
+      return true;
     } catch (err) {
-      console.error("Failed to send order notification:", err);
+      console.error("Failed to place order:", err);
+      showToast("Failed to place order", "error");
+      return false;
     }
-    showToast(`Order placed for "${book.title}"!`);
-    return true;
   };
 
   const cancelOrder = async (orderId: string) => {
     const order = orders.find((o) => o.id === orderId);
     if (!order || order.status !== "pending") return;
 
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" as const } : o))
-    );
-    setBooks((prev) =>
-      prev.map((b) =>
-        b.id === order.bookId ? { ...b, stockCount: b.stockCount + order.quantity } : b
-      )
-    );
-
-    // Send Cancellation notification via backend
     try {
-      await notificationAPI.send({
-        userId: currentUser!.id,
-        type: "Cancellation",
-        message: `Your order for '${order.bookTitle}' has been cancelled.`,
-      });
-      await fetchNotifications(currentUser!.id);
+      await orderAPI.cancel(orderId);
+
+      // Optimistically update local state
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" as const } : o))
+      );
+      setBooks((prev) =>
+        prev.map((b) =>
+          b.id === order.bookId ? { ...b, stockCount: b.stockCount + order.quantity } : b
+        )
+      );
+
+      // Send Cancellation notification
+      try {
+        await notificationAPI.send({
+          userId: currentUser!.id,
+          type: "Cancellation",
+          message: `Your order for '${order.bookTitle}' has been cancelled.`,
+        });
+        await fetchNotifications(currentUser!.id);
+      } catch (err) {
+        console.error("Failed to send cancellation notification:", err);
+      }
+      showToast("Order cancelled.", "info");
     } catch (err) {
-      console.error("Failed to send cancellation notification:", err);
+      console.error("Failed to cancel order:", err);
+      showToast("Failed to cancel order", "error");
     }
-    showToast("Order cancelled.", "info");
   };
 
   const deleteNotification = async (notifId: string) => {
@@ -156,31 +219,68 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const unreadCount = notifications.filter((n) => !readIds.has(n._id)).length;
 
-  const addBook = (bookData: BookFormData) => {
-    const newBook: Book = {
-      id: `b${Date.now()}`,
-      ...bookData,
-      stockCount: parseInt(String(bookData.stockCount)),
-      color: "bg-indigo-500",
-    };
-    setBooks((prev) => [...prev, newBook]);
-    showToast(`"${newBook.title}" added successfully!`);
+  const addBook = async (bookData: BookFormData, image?: File) => {
+    try {
+      const res = await bookAPI.create({
+        title: bookData.title,
+        author: bookData.author,
+        category: bookData.category,
+        price: Number(bookData.price) || 0,
+        stockCount: parseInt(String(bookData.stockCount)),
+        createdBy: currentUser?.id || "",
+        image,
+      });
+      // Optimistically add to local state while background refresh happens
+      const newBook = {
+        id: res.bookId || `temp_${Date.now()}`,
+        title: bookData.title,
+        author: bookData.author,
+        category: bookData.category,
+        price: Number(bookData.price) || 0,
+        stockCount: parseInt(String(bookData.stockCount)),
+      };
+      setBooks((prev) => [...prev, newBook]);
+      showToast(`"${bookData.title}" added successfully!`);
+    } catch (err) {
+      console.error("Failed to add book:", err);
+      showToast("Failed to add book", "error");
+    }
   };
 
-  const updateBook = (bookId: string, bookData: BookFormData) => {
-    setBooks((prev) =>
-      prev.map((b) =>
-        b.id === bookId
-          ? { ...b, ...bookData, stockCount: parseInt(String(bookData.stockCount)) }
-          : b
-      )
-    );
-    showToast("Book updated successfully!");
+  const updateBook = async (bookId: string, bookData: BookFormData, image?: File) => {
+    try {
+      await bookAPI.update(bookId, {
+        title: bookData.title,
+        author: bookData.author,
+        category: bookData.category,
+        price: Number(bookData.price) || 0,
+        stockCount: parseInt(String(bookData.stockCount)),
+        image,
+      });
+      // Optimistically update local state
+      setBooks((prev) =>
+        prev.map((b) =>
+          b.id === bookId
+            ? { ...b, ...bookData, price: Number(bookData.price) || 0, stockCount: parseInt(String(bookData.stockCount)) }
+            : b
+        )
+      );
+      showToast("Book updated successfully!");
+    } catch (err) {
+      console.error("Failed to update book:", err);
+      showToast("Failed to update book", "error");
+    }
   };
 
-  const deleteBook = (bookId: string) => {
-    setBooks((prev) => prev.filter((b) => b.id !== bookId));
-    showToast("Book deleted.", "info");
+  const deleteBook = async (bookId: string) => {
+    try {
+      await bookAPI.delete(bookId);
+      await fetchBooks();
+      showToast("Book deleted.", "info");
+    } catch (err) {
+      console.error("Failed to delete book:", err);
+      showToast("Failed to delete book", "error");
+    }
   };
 
   return (

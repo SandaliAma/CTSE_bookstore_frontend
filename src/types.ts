@@ -11,20 +11,25 @@ export interface UserWithPassword extends User {
 
 export interface Book {
   id: string;
+  _id?: string;
   title: string;
   author: string;
   category: string;
+  price?: number;
   stockCount: number;
-  description: string;
-  color: string;
+  description?: string;
+  color?: string;
+  imageLink?: string;
+  createdBy?: string;
 }
 
 export interface BookFormData {
   title: string;
   author: string;
   category: string;
+  price?: number;
   stockCount: string | number;
-  description: string;
+  description?: string;
 }
 
 export interface Order {
@@ -70,8 +75,8 @@ export interface AppContextType {
   markAllRead: () => void;
   notifLoading: boolean;
   fetchNotifications: (userId: string) => Promise<void>;
-  addBook: (bookData: BookFormData) => void;
-  updateBook: (bookId: string, bookData: BookFormData) => void;
+  addBook: (bookData: BookFormData, image?: File) => void;
+  updateBook: (bookId: string, bookData: BookFormData, image?: File) => void;
   deleteBook: (bookId: string) => void;
   showToast: (message: string, type?: "success" | "info" | "error") => void;
 }
