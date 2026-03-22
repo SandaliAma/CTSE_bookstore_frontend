@@ -18,7 +18,7 @@ export default function Navbar() {
   const [hovered, setHovered] = useState<string | null>(null);
 
   const handleLogout = () => { logout(); navigate("/login"); };
-
+  console.log("current User", currentUser)
   const isAdmin = currentUser?.role === "admin";
 
   const navLinks: NavLink[] = isAdmin
@@ -84,7 +84,7 @@ export default function Navbar() {
           {currentUser ? (
             <>
               <div style={s.userChip}>
-                <div style={s.avatar}>{currentUser.username[0].toUpperCase()}</div>
+                <div style={s.avatar}>{currentUser?.username.toUpperCase()}</div>
                 <div style={s.userInfo}>
                   <span style={s.userGreeting}>Hello,</span>
                   <span style={s.userName}>{currentUser.username}</span>

@@ -2,7 +2,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | string;
 }
 
 export interface UserWithPassword extends User {
@@ -53,6 +53,7 @@ export interface Toast {
 
 export interface AppContextType {
   currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
   books: Book[];
   orders: Order[];
   notifications: Notification[];

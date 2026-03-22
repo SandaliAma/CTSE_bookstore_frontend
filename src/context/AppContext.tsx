@@ -187,6 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         currentUser,
+        setCurrentUser,
         books,
         orders,
         notifications,

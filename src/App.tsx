@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
 import Navbar from "./components/Navbar";
 import Toast from "./components/Toast";
@@ -18,7 +24,12 @@ const AUTH_ROUTES = ["/login", "/register"];
 function GuestRoute({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
   if (currentUser) {
-    return <Navigate to={currentUser.role === "admin" ? "/admin" : "/dashboard"} replace />;
+    return (
+      <Navigate
+        to={currentUser.role === "admin" ? "/admin" : "/dashboard"}
+        replace
+      />
+    );
   }
   return <>{children}</>;
 }
@@ -28,18 +39,79 @@ function Layout() {
   const hideNav = AUTH_ROUTES.includes(location.pathname);
 
   return (
-    <div style={{ minHeight: "100vh", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        fontFamily: "'Segoe UI', system-ui, sans-serif",
+      }}
+    >
       {!hideNav && <Navbar />}
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
-        <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
-        <Route path="/dashboard"      element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/books"          element={<ProtectedRoute><BooksPage /></ProtectedRoute>} />
-        <Route path="/books/:id"      element={<ProtectedRoute><BookDetailPage /></ProtectedRoute>} />
-        <Route path="/orders"         element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-        <Route path="/notifications"  element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-        <Route path="/admin"          element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <LoginPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestRoute>
+              <RegisterPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/books"
+          element={
+            <ProtectedRoute>
+              <BooksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/books/:id"
+          element={
+            <ProtectedRoute>
+              <BookDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Toast />

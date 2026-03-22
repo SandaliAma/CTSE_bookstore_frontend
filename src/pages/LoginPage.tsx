@@ -1,25 +1,45 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { useForm } from "react-hook-form";
+import { login } from "../services/authService";
+
+type FormValues = {
+  email: string;
+  password: string;
+};
 
 export default function LoginPage() {
-  const { login } = useApp();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const { setCurrentUser } = useApp();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setError("");
-  };
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const res = await login(data);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const role = login(form.email, form.password);
-    if (role) {
-      navigate(role === "admin" ? "/admin" : "/dashboard");
-    } else {
-      setError("Invalid email or password. Please try again.");
+      const username = res.username || data.email.split("@")[0];
+
+      const newUser = {
+        id: res.id,
+        role: res.role,
+        email: data.email,
+        username,
+      };
+
+      setCurrentUser(newUser);
+
+      localStorage.setItem("bookstore_user", JSON.stringify(newUser));
+      localStorage.setItem("token", res.token);
+
+      navigate("/dashboard", { replace: true });
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Login failed");
     }
   };
 
@@ -32,14 +52,23 @@ export default function LoginPage() {
             <span style={styles.logoIcon}>📚</span>
             <span style={styles.logoText}>BookStore</span>
           </div>
-          <h2 style={styles.heroTitle}>Your next great read<br />is waiting for you.</h2>
+          <h2 style={styles.heroTitle}>
+            Your next great read
+            <br />
+            is waiting for you.
+          </h2>
           <p style={styles.heroSub}>
-            Thousands of books across every genre. Order in seconds, track everything in one place.
+            Thousands of books across every genre. Order in seconds, track
+            everything in one place.
           </p>
           <div style={styles.heroBadges}>
-            {["📖 8,000+ Titles", "🚀 Fast Delivery", "🔒 Secure Checkout"].map((b) => (
-              <span key={b} style={styles.badge}>{b}</span>
-            ))}
+            {["📖 8,000+ Titles", "🚀 Fast Delivery", "🔒 Secure Checkout"].map(
+              (b) => (
+                <span key={b} style={styles.badge}>
+                  {b}
+                </span>
+              ),
+            )}
           </div>
         </div>
       </div>
@@ -50,49 +79,56 @@ export default function LoginPage() {
           <h1 style={styles.cardTitle}>Sign In</h1>
           <p style={styles.cardSub}>Welcome back! Please enter your details.</p>
 
-          <form onSubmit={handleSubmit} style={styles.form}>
+          <form onSubmit={handleSubmit(onSubmit)} style={styles.form}>
             <div style={styles.field}>
               <label style={styles.label}>Email address</label>
               <input
                 type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+$/i,
+                    message: "Invalid email format",
+                  },
+                })}
                 placeholder="you@example.com"
-                required
                 style={styles.input}
                 onFocus={(e) => (e.target.style.borderColor = "#FF9900")}
                 onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
               />
+              {errors.email && (
+                <p style={styles.error}>{errors.email.message}</p>
+              )}
             </div>
 
             <div style={styles.field}>
               <label style={styles.label}>Password</label>
               <input
                 type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
+                {...register("password", { required: "Password is required" })}
                 style={styles.input}
                 onFocus={(e) => (e.target.style.borderColor = "#FF9900")}
                 onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
               />
+              {errors.password && (
+                <p style={styles.error}>{errors.password.message}</p>
+              )}
             </div>
 
-            {error && (
-              <div style={styles.errorBox}>
-                <span style={{ fontSize: 14 }}>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button type="submit" style={styles.submitBtn}
-              onMouseOver={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#e68a00")}
-              onMouseOut={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#FF9900")}
+            <button
+              type="submit"
+              style={styles.submitBtn}
+              disabled={isSubmitting}
+              onMouseOver={(e) =>
+                ((e.target as HTMLButtonElement).style.backgroundColor =
+                  "#e68a00")
+              }
+              onMouseOut={(e) =>
+                ((e.target as HTMLButtonElement).style.backgroundColor =
+                  "#FF9900")
+              }
             >
-              Sign In
+              {isSubmitting ? "Logging in..." : "Login"}
             </button>
           </form>
 
@@ -104,7 +140,9 @@ export default function LoginPage() {
 
           <p style={styles.registerText}>
             Don't have an account?{" "}
-            <Link to="/register" style={styles.link}>Create one free</Link>
+            <Link to="/register" style={styles.link}>
+              Create one free
+            </Link>
           </p>
 
           {/* Demo box */}
@@ -112,7 +150,9 @@ export default function LoginPage() {
             <p style={styles.demoTitle}>🔑 Demo Credentials</p>
             <div style={styles.demoRow}>
               <span style={styles.demoLabel}>User</span>
-              <span style={styles.demoValue}>john@example.com / password123</span>
+              <span style={styles.demoValue}>
+                john@example.com / password123
+              </span>
             </div>
             <div style={styles.demoRow}>
               <span style={styles.demoLabel}>Admin</span>
@@ -133,7 +173,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   heroPanel: {
     flex: 1,
-    background: "linear-gradient(135deg, #131921 0%, #1a2332 60%, #232f3e 100%)",
+    background:
+      "linear-gradient(135deg, #131921 0%, #1a2332 60%, #232f3e 100%)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -329,5 +370,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 11,
     color: "#78350f",
     fontFamily: "monospace",
+  },
+  error: {
+    color: "red",
+    fontSize: "0.8rem",
   },
 };
