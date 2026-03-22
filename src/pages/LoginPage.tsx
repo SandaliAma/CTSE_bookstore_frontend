@@ -18,11 +18,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { setCurrentUser } = useApp();
 
-  const [error, setError] = useState("");
   const { showToast } = useApp();
 
   const onSubmit = async (data: FormValues) => {
-    setError("");
     try {
       const res = await login(data);
 
@@ -44,12 +42,7 @@ export default function LoginPage() {
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       console.error(err);
-      const raw = err?.response?.data?.msg || err?.response?.data?.message || "";
-      const msg = raw === "Invalid Credentials"
-        ? "Incorrect email or password. Please try again."
-        : raw || "Login failed. Please check your credentials.";
-      setError(msg);
-      showToast(msg, "error");
+      showToast("Login failed. Please check your credentials.", "error");
     }
   };
 
@@ -124,13 +117,6 @@ export default function LoginPage() {
                 <p style={styles.error}>{errors.password.message}</p>
               )}
             </div>
-
-            {error && (
-              <div style={styles.errorBox}>
-                <span>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
 
             <button
               type="submit"

@@ -23,11 +23,9 @@ export default function RegisterPage() {
 
   const [success, setSuccess] = useState(false);
   const [username, setUserName] = useState("");
-  const [error, setError] = useState("");
   const { showToast } = useApp();
 
   const onSubmit = async (data: FormValues) => {
-    setError("");
     try {
       const res = await registerUser(data);
 
@@ -42,9 +40,7 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       console.error("Registration failed:", err);
-      const msg = err?.response?.data?.msg || err?.response?.data?.message || "Registration failed. Please try again.";
-      setError(msg);
-      showToast(msg, "error");
+      showToast("Registration failed. Please try again.", "error");
     }
   };
 
