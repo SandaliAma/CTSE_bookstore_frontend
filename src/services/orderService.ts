@@ -1,27 +1,41 @@
-import api from "./api";
+import axios from "axios";
+
+// Create a dedicated axios instance for order service
+const orderApi = axios.create({
+  baseURL: "https://ctse-order-service.onrender.com/orders",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export const orderAPI = {
-  // POST /api/orders/ - Create order
+  // POST /orders - Create order
   create: async (data: { userId: string; bookId: string; quantity: number }) => {
-    const res = await api.post("/orders", data);
+    const token = localStorage.getItem('token');
+    const res = await orderApi.post("/", data, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     return res.data;
   },
 
-  // GET /api/orders/history/:userId - Get user's orders
+ 
+  // GET /orders/history/:userId - Get user's orders
   getByUser: async (userId: string) => {
-    const res = await api.get(`/orders/history/${userId}`);
+    const res = await orderApi.get(`/history/${userId}`);
     return res.data;
   },
 
-  // GET /api/orders/:orderId - Get specific order
+  // GET /orders/:orderId - Get specific order
   getById: async (orderId: string) => {
-    const res = await api.get(`/orders/${orderId}`);
+    const res = await orderApi.get(`/${orderId}`);
     return res.data;
   },
 
-  // PUT /api/orders/:orderId/cancel - Cancel order
+  // PUT /orders/:orderId/cancel - Cancel order
   cancel: async (orderId: string) => {
-    const res = await api.put(`/orders/${orderId}/cancel`);
+    const res = await orderApi.put(`/${orderId}/cancel`);
     return res.data;
   },
 };
