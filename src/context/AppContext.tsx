@@ -144,17 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         prev.map((b) => (b.id === bookId ? { ...b, stockCount: b.stockCount - quantity } : b))
       );
 
-      // Send OrderConfirm notification
-      try {
-        await notificationAPI.send({
-          userId: currentUser!.id,
-          type: "OrderConfirm",
-          message: `Your borrow request for '${book.title}' (x${quantity}) has been confirmed.`,
-        });
-        await fetchNotifications(currentUser!.id);
-      } catch (err) {
-        console.error("Failed to send order notification:", err);
-      }
+      await fetchNotifications(currentUser!.id);
       showToast(`Order placed for "${book.title}"!`);
       return true;
     } catch (err) {
@@ -181,17 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         )
       );
 
-      // Send Cancellation notification
-      try {
-        await notificationAPI.send({
-          userId: currentUser!.id,
-          type: "Cancellation",
-          message: `Your order for '${order.bookTitle}' has been cancelled.`,
-        });
-        await fetchNotifications(currentUser!.id);
-      } catch (err) {
-        console.error("Failed to send cancellation notification:", err);
-      }
+     await fetchNotifications(currentUser!.id);
       showToast("Order cancelled.", "info");
     } catch (err) {
       console.error("Failed to cancel order:", err);
