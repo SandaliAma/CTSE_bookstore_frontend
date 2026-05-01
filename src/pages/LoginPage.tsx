@@ -18,6 +18,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { setCurrentUser } = useApp();
 
+  const { showToast } = useApp();
+
   const onSubmit = async (data: FormValues) => {
     try {
       const res = await login(data);
@@ -36,10 +38,11 @@ export default function LoginPage() {
       localStorage.setItem("bookstore_user", JSON.stringify(newUser));
       localStorage.setItem("token", res.token);
 
+      showToast(`Welcome back, ${username}!`, "success");
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       console.error(err);
-      alert(err?.response?.data?.message || "Login failed");
+      showToast("Login failed. Please check your credentials.", "error");
     }
   };
 
@@ -144,21 +147,6 @@ export default function LoginPage() {
               Create one free
             </Link>
           </p>
-
-          {/* Demo box */}
-          <div style={styles.demoBox}>
-            <p style={styles.demoTitle}>🔑 Demo Credentials</p>
-            <div style={styles.demoRow}>
-              <span style={styles.demoLabel}>User</span>
-              <span style={styles.demoValue}>
-                john@example.com / password123
-              </span>
-            </div>
-            <div style={styles.demoRow}>
-              <span style={styles.demoLabel}>Admin</span>
-              <span style={styles.demoValue}>sara@example.com / admin123</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

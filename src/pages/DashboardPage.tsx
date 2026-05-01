@@ -1,14 +1,39 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { recommendationAPI } from "../services/recommendationService";
+import BookImage from "../components/BookImage";
 import { colors, shadows, font, radius } from "../styles/theme";
 
 export default function DashboardPage() {
   const { currentUser, books, orders, notifications } = useApp();
   const navigate = useNavigate();
+  const [trending, setTrending] = useState<any[]>([]);
+  const [limited, setLimited] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRecs = async () => {
+      try {
+        const [t, l] = await Promise.all([
+          recommendationAPI.getTrending().catch(() => []),
+          recommendationAPI.getLimited().catch(() => []),
+        ]);
+        setTrending(Array.isArray(t) ? t : []);
+        setLimited(Array.isArray(l) ? l : []);
+      } catch (err) {
+        console.error("Failed to fetch recommendations:", err);
+      }
+    };
+    fetchRecs();
+  }, []);
 
   const userOrders = orders.filter((o) => o.userId === currentUser!.id);
   const pending = userOrders.filter((o) => o.status === "pending").length;
-  const featured = books.slice(0, 4);
+  const featured = trending.length > 0 ? trending.slice(0, 4) : books.slice(0, 4);
+  // Fallback: if recommendation service didn't return limited, compute from local books
+  const limitedBooks = limited.length > 0
+    ? limited
+    : [...books].sort((a, b) => a.stockCount - b.stockCount).slice(0, 3).filter(b => b.stockCount <= 5);
   const recentOrders = userOrders.slice(0, 3);
 
   const stats: Array<{ label: string; value: number; icon: string; color: string; light: string; action?: () => void }> = [
@@ -69,41 +94,77 @@ export default function DashboardPage() {
         </div>
 
         <div style={s.twoCol}>
-          {/* Featured Books */}
-          <div style={s.section}>
-            <div style={s.sectionHeader}>
-              <div>
-                <h2 style={s.sectionTitle}>Featured Books</h2>
-                <p style={s.sectionSub}>Handpicked titles just for you</p>
+          {/* Left column */}
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 20 }}>
+            {/* Trending Books */}
+            <div style={s.section}>
+              <div style={s.sectionHeader}>
+                <div>
+                  <h2 style={s.sectionTitle}>🔥 Trending Books</h2>
+                  <p style={s.sectionSub}>Top picks based on popularity</p>
+                </div>
+                <button onClick={() => navigate("/books")} style={s.seeAllBtn}>See all →</button>
               </div>
-              <button onClick={() => navigate("/books")} style={s.seeAllBtn}>See all →</button>
-            </div>
-            <div style={s.featuredGrid}>
-              {featured.map((book) => (
-                <div
-                  key={book.id}
-                  style={s.featuredCard}
-                  onClick={() => navigate(`/books/${book.id}`)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = shadows.lg;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = shadows.sm;
-                  }}
-                >
-                  <div style={{ ...s.featuredCover, background: bookGradient(book.color) }}>
-                    <span style={{ fontSize: 28 }}>📖</span>
+              <div style={s.featuredGrid}>
+                {featured.map((book: any, i: number) => (
+                  <div
+                    key={book._id || book.id || i}
+                    style={s.featuredCard}
+                    onClick={() => navigate(`/books/${book._id || book.id}`)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-4px)";
+                      e.currentTarget.style.boxShadow = shadows.lg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = shadows.sm;
+                    }}
+                  >
+                    <div style={{ ...s.featuredCover, background: bookGradient(book.category), position: "relative", overflow: "hidden" }}>
+                      <BookImage imageLink={book.imageLink} alt={book.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                      {!book.imageLink && <span style={{ fontSize: 28 }}>📖</span>}
+                    </div>
+                    <div style={s.featuredInfo}>
+                      <p style={s.featuredTitle}>{book.title}</p>
+                      <p style={s.featuredAuthor}>{book.author}</p>
+                      <p style={s.featuredPrice}>{book.category}</p>
+                    </div>
                   </div>
-                  <div style={s.featuredInfo}>
-                    <p style={s.featuredTitle}>{book.title}</p>
-                    <p style={s.featuredAuthor}>{book.author}</p>
-                    <p style={s.featuredPrice}>{book.category}</p>
+                ))}
+              </div>
+            </div>
+
+            {/* Limited Stock - below trending */}
+            {limitedBooks.length > 0 && (
+              <div style={s.section}>
+                <div style={s.sectionHeader}>
+                  <div>
+                    <h2 style={s.sectionTitle}>⚠️ Limited Stock</h2>
+                    <p style={s.sectionSub}>Grab these before they're gone</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                  {limitedBooks.map((book: any, i: number) => (
+                    <div
+                      key={book._id || i}
+                      style={{ ...s.orderRow, cursor: "pointer" }}
+                      onClick={() => navigate(`/books/${book._id || book.id}`)}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                    >
+                      <div style={{ ...s.statIcon, background: "#fef2f2", color: "#ef4444", width: 36, height: 36, fontSize: 16 }}>📕</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={s.orderTitle}>{book.title}</p>
+                        <p style={s.orderMeta}>by {book.author}</p>
+                      </div>
+                      <span style={{ ...s.statusPill, background: "#fef2f2", color: "#ef4444" }}>
+                        {book.stockCount} left
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right column */}
@@ -190,19 +251,19 @@ const notifConfig: Record<string, { color: string; light: string }> = {
   Cancellation: { color: "#ef4444", light: "#fef2f2" },
 };
 
-function bookGradient(colorClass: string): string {
+function bookGradient(category: string): string {
   const map: Record<string, string> = {
-    "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
-    "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
-    "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
-    "bg-gray-700":   "linear-gradient(135deg, #9ca3af, #4b5563)",
-    "bg-orange-400": "linear-gradient(135deg, #fb923c, #f97316)",
-    "bg-purple-500": "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-    "bg-amber-600":  "linear-gradient(135deg, #fbbf24, #d97706)",
-    "bg-teal-500":   "linear-gradient(135deg, #2dd4bf, #14b8a6)",
-    "bg-indigo-500": "linear-gradient(135deg, #818cf8, #6366f1)",
+    "Romance":   "linear-gradient(135deg, #f472b6, #ec4899)",
+    "Thriller":  "linear-gradient(135deg, #64748b, #334155)",
+    "Fantasy":   "linear-gradient(135deg, #a78bfa, #7c3aed)",
+    "Science":   "linear-gradient(135deg, #60a5fa, #2563eb)",
+    "Horror":    "linear-gradient(135deg, #ef4444, #991b1b)",
+    "Self-help": "linear-gradient(135deg, #fbbf24, #d97706)",
+    "Health":    "linear-gradient(135deg, #34d399, #059669)",
+    "Cookbooks": "linear-gradient(135deg, #fb923c, #ea580c)",
+    "Poetry":    "linear-gradient(135deg, #c084fc, #9333ea)",
   };
-  return map[colorClass] || "linear-gradient(135deg, #94a3b8, #64748b)";
+  return map[category] || "linear-gradient(135deg, #818cf8, #6366f1)";
 }
 
 const s: Record<string, React.CSSProperties> = {

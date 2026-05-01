@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import BookModal from "../components/BookModal";
+import BookImage from "../components/BookImage";
 import { colors, shadows, font, radius } from "../styles/theme";
 import type { Book } from "../types";
 
@@ -24,7 +25,7 @@ export default function AdminPage() {
 
   const handleEdit = (book: Book) => { setEditBook(book); setModalOpen(true); };
   const handleAdd  = () => { setEditBook(null); setModalOpen(true); };
-  const handleSave = (form: Parameters<typeof addBook>[0]) => { editBook ? updateBook(editBook.id, form) : addBook(form); };
+  const handleSave = (form: Parameters<typeof addBook>[0], image?: File) => { editBook ? updateBook(editBook.id, form, image) : addBook(form, image); };
 
   const stats = [
     { label: "Total Books",   value: books.length,                                                  icon: "📚", color: colors.accent, light: colors.accentLight },
@@ -92,8 +93,9 @@ export default function AdminPage() {
                     <tr key={book.id} style={{ ...s.tr, background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                       <td style={s.td}>
                         <div style={s.bookCell}>
-                          <div style={{ ...s.bookThumb, background: bookGradient(book.color) }}>
-                            📖
+                          <div style={{ ...s.bookThumb, background: bookGradient(book.category), position: "relative", overflow: "hidden" }}>
+                            <BookImage imageLink={book.imageLink} alt={book.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }} />
+                            {!book.imageLink && <span>📖</span>}
                           </div>
                           <div>
                             <p style={s.bookName}>{book.title}</p>
@@ -173,19 +175,19 @@ export default function AdminPage() {
   );
 }
 
-function bookGradient(colorClass: string): string {
+function bookGradient(category: string): string {
   const map: Record<string, string> = {
-    "bg-yellow-400": "linear-gradient(135deg, #fbbf24, #f59e0b)",
-    "bg-blue-500":   "linear-gradient(135deg, #60a5fa, #3b82f6)",
-    "bg-green-500":  "linear-gradient(135deg, #34d399, #10b981)",
-    "bg-gray-700":   "linear-gradient(135deg, #9ca3af, #4b5563)",
-    "bg-orange-400": "linear-gradient(135deg, #fb923c, #f97316)",
-    "bg-purple-500": "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-    "bg-amber-600":  "linear-gradient(135deg, #fbbf24, #d97706)",
-    "bg-teal-500":   "linear-gradient(135deg, #2dd4bf, #14b8a6)",
-    "bg-indigo-500": "linear-gradient(135deg, #818cf8, #6366f1)",
+    "Romance":   "linear-gradient(135deg, #f472b6, #ec4899)",
+    "Thriller":  "linear-gradient(135deg, #64748b, #334155)",
+    "Fantasy":   "linear-gradient(135deg, #a78bfa, #7c3aed)",
+    "Science":   "linear-gradient(135deg, #60a5fa, #2563eb)",
+    "Horror":    "linear-gradient(135deg, #ef4444, #991b1b)",
+    "Self-help": "linear-gradient(135deg, #fbbf24, #d97706)",
+    "Health":    "linear-gradient(135deg, #34d399, #059669)",
+    "Cookbooks": "linear-gradient(135deg, #fb923c, #ea580c)",
+    "Poetry":    "linear-gradient(135deg, #c084fc, #9333ea)",
   };
-  return map[colorClass] || "linear-gradient(135deg, #94a3b8, #64748b)";
+  return map[category] || "linear-gradient(135deg, #818cf8, #6366f1)";
 }
 
 const s: Record<string, React.CSSProperties> = {
